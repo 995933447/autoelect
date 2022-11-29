@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type ElectionDriver int
+type ElectDriver int
 
 const (
 	ElectDriverNil = iota
@@ -22,7 +22,7 @@ type DistribMuElectDriverConf struct {
 	muDriverConf interface{}
 }
 
-func NewAuthElection(driver ElectionDriver, driverConf interface{}) (autoelect.AutoElection, error) {
+func NewAuthElection(driver ElectDriver, driverConf interface{}) (autoelect.AutoElection, error) {
 	switch driver {
 	case ElectDriverGitDistribMu:
 		specConf := driverConf.(*DistribMuElectDriverConf)
