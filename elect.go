@@ -5,6 +5,6 @@ import (
 )
 
 type AutoElection interface {
-	LoopInAuthElect(ctx context.Context)
+	LoopInElect(ctx context.Context)
 	StopElect()
 }

@@ -50,7 +50,7 @@ func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf 
 	return election, nil
 }
 
-func (e *AutoElection) LoopInAuthElect(ctx context.Context) {
+func (e *AutoElection) LoopInElect(ctx context.Context) {
 	// 信号监听
 	procSignChan := make(chan os.Signal, 1)
 	go func() {
