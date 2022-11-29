@@ -36,16 +36,26 @@ func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf 
 
 	election := new(AutoElection)
 
-	allLocalIps, err := util.GetLocalIpsWithoutLoopback()
+	localIps, err := util.GetLocalIpsWithoutLoopback()
 	if err != nil {
 		return nil, err
 	}
 
-	if len(allLocalIps) == 0 {
+	if len(localIps) == 0 {
 		return nil, errors.New("not found any local ip")
 	}
 
-	election.mu = factory.MustNewMu(factory.NewMuConf(muConfType, key, ttl, fmt.Sprintf("ip=%s", allLocalIps[0]), muDriverConf))
+	macAddrs, err := util.GetMacAddrs()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(macAddrs) == 0 {
+		return nil, errors.New("not found any mac address")
+	}
+
+	muConf := factory.NewMuConf(muConfType, key, ttl, fmt.Sprintf("ip=%s;mac=%s", localIps[0], macAddrs[0]), muDriverConf)
+	election.mu = factory.MustNewMu(muConf)
 
 	return election, nil
 }

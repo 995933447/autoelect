@@ -4,6 +4,20 @@ import (
 	"net"
 )
 
+func GetMacAddrs() ([]string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	var macAddrs []string
+	for _, netInterface := range interfaces {
+		if macAddr := netInterface.HardwareAddr.String(); macAddr != "" {
+			macAddrs = append(macAddrs, macAddr)
+		}
+	}
+	return macAddrs, nil
+}
+
 func GetLocalIpsWithoutLoopback() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
