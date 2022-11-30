@@ -5,6 +5,6 @@ import (
 )
 
 type AutoElection interface {
-	LoopInElect(ctx context.Context)
+	LoopInElect(ctx context.Context) chan error
 	StopElect()
 }

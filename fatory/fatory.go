@@ -26,7 +26,7 @@ func NewAuthElection(driver ElectDriver, driverConf interface{}) (autoelect.Auto
 	switch driver {
 	case ElectDriverGitDistribMu:
 		specConf := driverConf.(*DistribMuElectDriverConf)
-		return gitdistribmu.New(specConf.key, specConf.ttl, specConf.muConfType, specConf.muDriverConf)
+		return _9distribmu.New(specConf.key, specConf.ttl, specConf.muConfType, specConf.muDriverConf)
 	}
 	return nil, fmt.Errorf("invalid driver:%d", driver)
 }

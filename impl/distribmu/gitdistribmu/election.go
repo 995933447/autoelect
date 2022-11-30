@@ -8,9 +8,6 @@ import (
 	"github.com/995933447/autoelect/util"
 	"github.com/995933447/distribmu"
 	"github.com/995933447/distribmu/factory"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -56,32 +53,20 @@ func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf 
 
 	muConf := factory.NewMuConf(muConfType, key, ttl, fmt.Sprintf("ip=%s;mac=%s", localIps[0], macAddrs[0]), muDriverConf)
 	election.mu = factory.MustNewMu(muConf)
+	election.stopSignCh = make(chan struct{})
 
 	return election, nil
 }
 
-func (e *AutoElection) LoopInElect(ctx context.Context) {
-	// 信号监听
-	procSignChan := make(chan os.Signal, 1)
-	go func() {
-		for {
-			sig := <-procSignChan
-			if sig == syscall.SIGINT || sig == syscall.SIGTERM {
-				if e.isMaster {
-					e.isMaster = false
-					_ = e.mu.Unlock(ctx, false)
-				}
-				os.Exit(0)
-			}
-		}
-	}()
-	signal.Notify(procSignChan, syscall.SIGINT, syscall.SIGTERM)
-
-	e.stopSignCh = make(chan struct{}, 1)
+func (e *AutoElection) LoopInElect(ctx context.Context) chan error {
+	errCh := make(chan error)
 	defer func() {
 		if e.isMaster {
 			e.isMaster = false
-			_ = e.mu.Unlock(ctx, false)
+			err := e.mu.Unlock(ctx, false)
+			if err != nil {
+				errCh <- err
+			}
 		}
 	}()
 
@@ -105,6 +90,7 @@ func (e *AutoElection) LoopInElect(ctx context.Context) {
 					if err != distribmu.ErrLockLost {
 						err = e.mu.Unlock(ctx, false)
 						if err != nil {
+							errCh <- err
 						}
 					}
 					// 刷新失败，当失去了 master 地位
@@ -119,6 +105,7 @@ func (e *AutoElection) LoopInElect(ctx context.Context) {
 
 		locked, err := e.mu.LockWait(ctx, 10 * time.Second)
 		if err != nil {
+			errCh <- err
 			time.Sleep(time.Second)
 			continue
 		}
@@ -127,11 +114,11 @@ func (e *AutoElection) LoopInElect(ctx context.Context) {
 			e.isMaster = true
 		}
 	}
+
+	return errCh
 }
 
 func (e *AutoElection) StopElect() {
-	if e.stopSignCh != nil {
-		e.stopSignCh <- struct{}{}
-	}
+	e.stopSignCh <- struct{}{}
 }
 
