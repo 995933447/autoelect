@@ -22,11 +22,7 @@ type AutoElection struct {
 
 var _ autoelect.AutoElection = (*AutoElection)(nil)
 
-func (e *AutoElection) IsMaster() bool {
-	return e.isMaster
-}
-
-func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf interface{}) (*AutoElection, error) {
+func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf any) (*AutoElection, error) {
 	if key == "" {
 		return nil, errors.New("invalid key")
 	}
@@ -58,14 +54,17 @@ func New(key string, ttl time.Duration, muConfType factory.MuType, muDriverConf 
 	return election, nil
 }
 
-func (e *AutoElection) LoopInElect(ctx context.Context) chan error {
-	errCh := make(chan error)
+func (e *AutoElection) LoopInElect(ctx context.Context, errDuringLoopCh chan error) error {
+	if errDuringLoopCh == nil {
+		return errors.New("errCh can't be nil")
+	}
+
 	defer func() {
 		if e.isMaster {
 			e.isMaster = false
 			err := e.mu.Unlock(ctx, false)
 			if err != nil {
-				errCh <- err
+				errDuringLoopCh <- err
 			}
 		}
 	}()
@@ -90,7 +89,7 @@ func (e *AutoElection) LoopInElect(ctx context.Context) chan error {
 					if err != distribmu.ErrLockLost {
 						err = e.mu.Unlock(ctx, false)
 						if err != nil {
-							errCh <- err
+							errDuringLoopCh <- err
 						}
 					}
 					// 刷新失败，当失去了 master 地位
@@ -105,7 +104,7 @@ func (e *AutoElection) LoopInElect(ctx context.Context) chan error {
 
 		locked, err := e.mu.LockWait(ctx, 10 * time.Second)
 		if err != nil {
-			errCh <- err
+			errDuringLoopCh <- err
 			time.Sleep(time.Second)
 			continue
 		}
@@ -115,10 +114,13 @@ func (e *AutoElection) LoopInElect(ctx context.Context) chan error {
 		}
 	}
 
-	return errCh
+	return nil
 }
 
 func (e *AutoElection) StopElect() {
 	e.stopSignCh <- struct{}{}
 }
 
+func (e *AutoElection) IsMaster() bool {
+	return e.isMaster
+}
