@@ -16,7 +16,7 @@ import (
 func TestLoopInGitDistribElect(t *testing.T) {
 	logger := log.NewLogger(loggerwriters.NewStdoutLoggerWriter(print.ColorBlue))
 	logger.SetLogLevel(log.LevelPanic)
-	elect, err := factory.NewAuthElection(
+	elect, err := factory.NewAutoElection(
 		factory.ElectDriverGitDistribMu,
 		factory.NewDistribMuElectDriverConf(
 			"abc",

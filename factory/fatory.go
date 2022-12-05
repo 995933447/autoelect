@@ -31,7 +31,7 @@ func NewDistribMuElectDriverConf(key string, ttl time.Duration, muType factory.M
 	}
 }
 
-func NewAuthElection(driver ElectDriver, driverConf any) (autoelect.AutoElection, error) {
+func NewAutoElection(driver ElectDriver, driverConf any) (autoelect.AutoElection, error) {
 	switch driver {
 	case ElectDriverGitDistribMu:
 		specConf := driverConf.(*DistribMuElectDriverConf)
