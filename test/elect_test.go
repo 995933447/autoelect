@@ -6,7 +6,7 @@ import (
 	"github.com/995933447/autoelect/factory"
 	mufactory "github.com/995933447/distribmu/factory"
 	"github.com/995933447/log-go"
-	"github.com/995933447/log-go/impls/loggerwriters"
+	"github.com/995933447/log-go/impl/loggerwriter"
 	"github.com/995933447/redisgroup"
 	"github.com/995933447/std-go/print"
 	"testing"
@@ -14,7 +14,7 @@ import (
 )
 
 func TestLoopInGitDistribElect(t *testing.T) {
-	logger := log.NewLogger(loggerwriters.NewStdoutLoggerWriter(print.ColorBlue))
+	logger := log.NewLogger(loggerwriter.NewStdoutLoggerWriter(print.ColorBlue))
 	logger.SetLogLevel(log.LevelPanic)
 	elect, err := factory.NewAutoElection(
 		factory.ElectDriverGitDistribMu,
